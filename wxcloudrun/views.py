@@ -1,14 +1,15 @@
 from datetime import datetime
-from flask import render_template, request
+from flask import render_template, request, jsonify
 from run import app
 from wxcloudrun.dao import delete_counterbyid, query_counterbyid, insert_counter, update_counterbyid
-from wxcloudrun.model import Counters
+from wxcloudrun.model import Counters, User, Venue, Booking
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
-
-from wxcloudrun.model import User, Venue, Booking
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from wxcloudrun import db
+import requests
+import config
+from wxcloudrun.util import Util
 
 admin = Admin(app, name='管理后台', template_mode='bootstrap3')
 admin.add_view(ModelView(User, db.session))
@@ -17,59 +18,153 @@ admin.add_view(ModelView(Booking, db.session))
 
 @app.route('/')
 def index():
-    """
-    :return: 返回index页面
-    """
     return render_template('index.html')
 
+@app.route('/login', methods=['POST'])
+def login():
+    js_code = request.json.get('js_code')
+    username = request.json.get('username')
+    email = request.json.get('email')
+    phone_number = request.json.get('phone_number')
 
-@app.route('/api/count', methods=['POST'])
-def count():
-    """
-    :return:计数结果/清除结果
-    """
+    if not js_code or not username or not email or not phone_number:
+        return jsonify({'status': 'error', 'message': '缺少必要的参数'}), 400
 
-    # 获取请求体参数
-    params = request.get_json()
+    url = f'https://api.weixin.qq.com/sns/jscode2session?appid={config.APP_ID}&secret={config.APP_SECRET}&js_code={js_code}&grant_type=authorization_code'
+    response = requests.get(url)
 
-    # 检查action参数
-    if 'action' not in params:
-        return make_err_response('缺少action参数')
+    if response.status_code == 200:
+        session_data = response.json()
+        openid = session_data.get('openid')
+        if openid:
+            user = User.query.filter_by(openid=openid).first()
+            if user:
+                token = Util.create_token(user.id, config.SERVER_SECRET, 3600 * 24)
+                return jsonify({
+                    'status': 'success',
+                    'openid': openid,
+                    'username': user.username,
+                    'email': user.email,
+                    'user_id': user.id,
+                    'token': token,
+                    'message': '登录成功'
+                })
+            else:
+                try:
+                    new_user = User(username=username, email=email, phone_number=phone_number, openid=openid)
+                    db.session.add(new_user)
+                    db.session.commit()
 
-    # 按照不同的action的值，进行不同的操作
-    action = params['action']
-
-    # 执行自增操作
-    if action == 'inc':
-        counter = query_counterbyid(1)
-        if counter is None:
-            counter = Counters()
-            counter.id = 1
-            counter.count = 1
-            counter.created_at = datetime.now()
-            counter.updated_at = datetime.now()
-            insert_counter(counter)
+                    token = Util.create_token(new_user.id, config.SERVER_SECRET, 3600 * 24)
+                    return jsonify({
+                        'status': 'success',
+                        'openid': openid,
+                        'username': username,
+                        'email': email,
+                        'user_id': new_user.id,
+                        'token': token,
+                        'message': '注册并登录成功'
+                    })
+                except Exception as e:
+                    db.session.rollback()
+                    return jsonify({
+                        'status': 'error',
+                        'message': '注册失败: ' + str(e)
+                    }), 500
         else:
-            counter.id = 1
-            counter.count += 1
-            counter.updated_at = datetime.now()
-            update_counterbyid(counter)
-        return make_succ_response(counter.count)
+            return jsonify({
+                'status': 'error',
+                'message': '网络请求失败'
+            }), response.status_code
 
-    # 执行清0操作
-    elif action == 'clear':
-        delete_counterbyid(1)
-        return make_succ_empty_response()
 
-    # action参数错误
+@app.route('/allbookings', methods=['GET'])
+def get_allbookings():
+    bookings = db.session.query(Booking, User, Venue).join(User, Booking.user_id == User.id).join(Venue, Booking.venue_id == Venue.id).all()
+
+    events = []
+    for booking, user, venue in bookings:
+        events.append({
+            'title': f"{user.username} - {venue.name} ({booking.details})",
+            'start': booking.booking_date.isoformat(),
+            'description': booking.details
+        })
+
+    return jsonify(events)
+
+
+@app.route('/venues', methods=['GET'])
+def get_venues():
+    venues = Venue.query.all()
+    return jsonify([{'id': v.id, 'name': v.name, 'location': v.location} for v in venues])
+
+
+@app.route('/takebooking', methods=['POST'])
+def create_booking():
+    data = request.get_json()
+    user_id = Util.get_current_user_id(request)
+
+    if user_id is not None:
+        venue_id = data.get('venue_id')
+        booking_date = datetime.strptime(data.get('booking_date'), '%Y-%m-%d').date()
+        start_time = datetime.strptime(data.get('start_time'), '%H:%M').time()
+        end_time = datetime.strptime(data.get('end_time'), '%H:%M').time()
+        details = data.get('details')
+
+        existing_booking = Booking.query.filter(
+            Booking.user_id == user_id,
+            Booking.venue_id == venue_id,
+            Booking.booking_date == booking_date,
+            Booking.start_time <= end_time,
+            Booking.end_time >= start_time
+        ).first()
+        if existing_booking:
+            return jsonify({'message': 'This time slot is already booked.'}), 400
+
+        new_booking = Booking(
+            user_id=user_id,
+            venue_id=venue_id,
+            booking_date=booking_date,
+            start_time=start_time,
+            end_time=end_time,
+            details=details
+        )
+
+        db.session.add(new_booking)
+        db.session.commit()
+
+        return jsonify({'message': 'Booking created successfully.'}), 201
     else:
-        return make_err_response('action参数错误')
+        return jsonify({'message': 'TOKEN过期请重新登录.'}), 202
 
 
-@app.route('/api/count', methods=['GET'])
-def get_count():
-    """
-    :return: 计数的值
-    """
-    counter = Counters.query.filter(Counters.id == 1).first()
-    return make_succ_response(0) if counter is None else make_succ_response(counter.count)
+@app.route('/bookings', methods=['GET'])
+def get_bookings():
+    user_id = Util.get_current_user_id(request)
+    bookings = Booking.query.filter_by(user_id=user_id).all()
+
+    result = []
+    for booking in bookings:
+        venue = Venue.query.get(booking.venue_id)
+        result.append({
+            'id': booking.id,
+            'venue_name': venue.name,
+            'venue_location': venue.location,
+            'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
+            'start_time': booking.start_time.strftime('%H:%M'),
+            'end_time': booking.end_time.strftime('%H:%M'),
+            'details': booking.details
+        })
+
+    return jsonify(result), 200
+
+@app.route('/bookings/<int:booking_id>', methods=['DELETE'])
+def cancel_booking(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    if booking.user_id != Util.get_current_user_id(request):
+        return jsonify({'message': 'You do not have permission to cancel this booking.'}), 403
+
+    db.session.delete(booking)
+    db.session.commit()
+
+    return jsonify({'message': 'Booking cancelled successfully.'}), 200
