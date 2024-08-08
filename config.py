@@ -7,4 +7,3 @@ DEBUG = True
 username = os.environ.get("MYSQL_USERNAME", 'root')
 password = os.environ.get("MYSQL_PASSWORD", 'root')
 db_address = os.environ.get("MYSQL_ADDRESS", '127.0.0.1:3306')
-hehe = "22"
