@@ -5,6 +5,15 @@ from wxcloudrun.dao import delete_counterbyid, query_counterbyid, insert_counter
 from wxcloudrun.model import Counters
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 
+from wxcloudrun.model import User, Venue, Booking
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+from wxcloudrun import db
+
+admin = Admin(app, name='管理后台', template_mode='bootstrap3')
+admin.add_view(ModelView(User, db.session))
+admin.add_view(ModelView(Venue, db.session))
+admin.add_view(ModelView(Booking, db.session))
 
 @app.route('/')
 def index():
