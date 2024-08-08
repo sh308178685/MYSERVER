@@ -31,7 +31,9 @@ def login():
         return jsonify({'status': 'error', 'message': '缺少必要的参数'}), 400
 
     url = f'https://api.weixin.qq.com/sns/jscode2session?appid={config.APP_ID}&secret={config.APP_SECRET}&js_code={js_code}&grant_type=authorization_code'
-    response = requests.get(url)
+
+    response = requests.get(url, verify=False)
+    # response = requests.get(url)
 
     if response.status_code == 200:
         session_data = response.json()
