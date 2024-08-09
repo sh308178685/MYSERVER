@@ -117,8 +117,8 @@ def create_booking():
             Booking.user_id == user_id,
             Booking.venue_id == venue_id,
             # Booking.booking_date == booking_date,
-            Booking.start_time <= end_date,
-            Booking.end_time >= start_date
+            Booking.start_date <= end_date,
+            Booking.end_date >= start_date
         ).first()
         if existing_booking:
             return jsonify({'message': 'This time slot is already booked.'}), 400
