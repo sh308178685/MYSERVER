@@ -88,7 +88,7 @@ def get_allbookings():
     for booking, user, venue in bookings:
         events.append({
             'title': f"{user.username} - {venue.name} ({booking.details})",
-            'start': booking.booking_date.isoformat(),
+            'start': booking.start_date.isoformat(),
             'description': booking.details
         })
 
@@ -153,8 +153,8 @@ def get_bookings():
             'venue_name': venue.name,
             'venue_location': venue.location,
             # 'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
-            'start_time': booking.start_time.strftime('%Y-%m-%d %H:%M'),
-            'end_time': booking.end_time.strftime('%Y-%m-%d %H:%M'),
+            'start_date': booking.start_time.strftime('%Y-%m-%d %H:%M'),
+            'end_date': booking.end_time.strftime('%Y-%m-%d %H:%M'),
             'details': booking.details
         })
 
