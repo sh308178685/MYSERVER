@@ -108,17 +108,17 @@ def create_booking():
 
     if user_id is not None:
         venue_id = data.get('venue_id')
-        booking_date = datetime.strptime(data.get('booking_date'), '%Y-%m-%d').date()
-        start_time = datetime.strptime(data.get('start_time'), '%H:%M').time()
-        end_time = datetime.strptime(data.get('end_time'), '%H:%M').time()
+        # booking_date = datetime.strptime(data.get('booking_date'), '%Y-%m-%d').date()
+        start_date = datetime.strptime(data.get('start_date'), '%H:%M').time()
+        end_date = datetime.strptime(data.get('end_date'), '%H:%M').time()
         details = data.get('details')
 
         existing_booking = Booking.query.filter(
             Booking.user_id == user_id,
             Booking.venue_id == venue_id,
-            Booking.booking_date == booking_date,
-            Booking.start_time <= end_time,
-            Booking.end_time >= start_time
+            # Booking.booking_date == booking_date,
+            Booking.start_time <= end_date,
+            Booking.end_time >= start_date
         ).first()
         if existing_booking:
             return jsonify({'message': 'This time slot is already booked.'}), 400
@@ -126,9 +126,9 @@ def create_booking():
         new_booking = Booking(
             user_id=user_id,
             venue_id=venue_id,
-            booking_date=booking_date,
-            start_time=start_time,
-            end_time=end_time,
+            # booking_date=booking_date,
+            start_date=start_date,
+            end_date=end_date,
             details=details
         )
 
@@ -152,9 +152,9 @@ def get_bookings():
             'id': booking.id,
             'venue_name': venue.name,
             'venue_location': venue.location,
-            'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
-            'start_time': booking.start_time.strftime('%H:%M'),
-            'end_time': booking.end_time.strftime('%H:%M'),
+            # 'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
+            'start_time': booking.start_time.strftime('%Y-%m-%d %H:%M'),
+            'end_time': booking.end_time.strftime('%Y-%m-%d %H:%M'),
             'details': booking.details
         })
 
