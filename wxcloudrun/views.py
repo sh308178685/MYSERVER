@@ -153,8 +153,8 @@ def get_bookings():
             'venue_name': venue.name,
             'venue_location': venue.location,
             # 'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
-            'start_date': booking.start_time.strftime('%Y-%m-%d %H:%M'),
-            'end_date': booking.end_time.strftime('%Y-%m-%d %H:%M'),
+            'start_date': booking.start_date.strftime('%Y-%m-%d %H:%M'),
+            'end_date': booking.end_date.strftime('%Y-%m-%d %H:%M'),
             'details': booking.details
         })
 
