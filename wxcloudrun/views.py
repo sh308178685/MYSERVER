@@ -123,6 +123,9 @@ def create_booking():
         if existing_booking:
             return jsonify({'message': 'This time slot is already booked.'}), 400
 
+        if end_date <= start_date:
+            return jsonify({'message': 'end time is before start time.'}), 401
+
         new_booking = Booking(
             user_id=user_id,
             venue_id=venue_id,
