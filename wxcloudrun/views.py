@@ -88,7 +88,8 @@ def get_allbookings():
     for booking, user, venue in bookings:
         events.append({
             'title': f"{user.username} - {venue.name} ({booking.details})",
-            'start': booking.start_date.isoformat(),
+            'start': booking.start_date.strftime('%Y-%m-%d'),
+            'end' : booking.end_date.strftime('%Y-%m-%d'),
             'description': booking.details
         })
 
