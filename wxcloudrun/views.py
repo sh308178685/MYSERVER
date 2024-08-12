@@ -109,8 +109,8 @@ def create_booking():
     if user_id is not None:
         venue_id = data.get('venue_id')
         # booking_date = datetime.strptime(data.get('booking_date'), '%Y-%m-%d').date()
-        start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d %H:%M').time()
-        end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d %H:%M').time()
+        start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d %H:%M')
+        end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d %H:%M')
         details = data.get('details')
 
         existing_booking = Booking.query.filter(
