@@ -87,6 +87,14 @@ class PendingBookingModelView(ModelView):
         }.get(m.status, '未知状态')
     }
 
+    form_choices = {
+        'status': [
+            ('pending', '待审核'),
+            ('approved', '已批准'),
+            ('rejected', '已拒绝')
+        ]
+    }
+
     # 限制页面只显示status为pending的记录
     def get_query(self):
         return self.session.query(self.model).filter(self.model.status == 'pending')
