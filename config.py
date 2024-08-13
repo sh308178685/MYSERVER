@@ -7,6 +7,10 @@ APP_ID = 'wx666e0c0e26d4d33e'
 APP_SECRET = '9c351869c1c6e30160dc832796dfdacc'
 
 # 读取数据库环境变量
+# username = os.environ.get("MYSQL_USERNAME", 'root')
+# password = os.environ.get("MYSQL_PASSWORD", 'KXh9VsgZ')
+# db_address = os.environ.get("MYSQL_ADDRESS", 'sh-cynosdbmysql-grp-c25eh650.sql.tencentcdb.com:29998')
+
 username = os.environ.get("MYSQL_USERNAME", 'root')
-password = os.environ.get("MYSQL_PASSWORD", 'KXh9VsgZ')
-db_address = os.environ.get("MYSQL_ADDRESS", 'sh-cynosdbmysql-grp-c25eh650.sql.tencentcdb.com:29998')
+password = os.environ.get("MYSQL_PASSWORD", '890527')
+db_address = os.environ.get("MYSQL_ADDRESS", 'localhost:3306')

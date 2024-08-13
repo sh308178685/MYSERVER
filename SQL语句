@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS bookings (
     start_date DATETIME,
     end_date DATETIME,
     details TEXT,
+    status VARCHAR(20) DEFAULT 'pending',
+    admin_feedback TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (venue_id) REFERENCES venues(id)
 );

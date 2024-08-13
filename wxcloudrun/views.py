@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import render_template, request, jsonify
 from run import app
 from wxcloudrun.dao import delete_counterbyid, query_counterbyid, insert_counter, update_counterbyid
-from wxcloudrun.model import Counters, User, Venue, Booking
+from wxcloudrun.model import BookingModelView, Counters, PendingBookingModelView, User, Venue, Booking
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
@@ -14,7 +14,10 @@ from wxcloudrun.util import Util
 admin = Admin(app, name='管理后台', template_mode='bootstrap3')
 admin.add_view(ModelView(User, db.session))
 admin.add_view(ModelView(Venue, db.session))
-admin.add_view(ModelView(Booking, db.session))
+# admin.add_view(ModelView(Booking, db.session))
+admin.add_view(BookingModelView(Booking, db.session,name='所有预订',endpoint="all_bookings"  ))
+# 添加视图，专门用于显示待审核的预定信息
+admin.add_view(PendingBookingModelView(Booking, db.session, name='待审核预订',endpoint="pending_bookings" ))
 
 @app.route('/')
 def index():
@@ -90,7 +93,8 @@ def get_allbookings():
             'title': f"{user.username} - {venue.name} ({booking.details})",
             'start': booking.start_date.strftime('%Y-%m-%d'),
             'end' : booking.end_date.strftime('%Y-%m-%d'),
-            'description': booking.details
+            'description': booking.details,
+            'status':booking.status
         })
 
     return jsonify(events)
@@ -133,7 +137,9 @@ def create_booking():
             # booking_date=booking_date,
             start_date=start_date,
             end_date=end_date,
-            details=details
+            details=details,
+            status='pending',
+            
         )
 
         db.session.add(new_booking)
@@ -159,7 +165,10 @@ def get_bookings():
             # 'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
             'start_date': booking.start_date.strftime('%Y-%m-%d %H:%M'),
             'end_date': booking.end_date.strftime('%Y-%m-%d %H:%M'),
-            'details': booking.details
+            'details': booking.details,
+            'status':booking.status,
+            'admin_feedback':booking.admin_feedback
+
         })
 
     return jsonify(result), 200
