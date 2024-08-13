@@ -22,12 +22,17 @@ class User(db.Model):
     email = db.Column(db.String(100))
     phone_number = db.Column(db.String(20))
     openid = db.Column(db.String(255))
+    def __repr__(self):
+        return self.username
 
 class Venue(db.Model):
     __tablename__ = 'venues'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     location = db.Column(db.String(255))
+    def __repr__(self):
+        return self.name
+
 
 class Booking(db.Model):
     __tablename__ = 'bookings'
