@@ -30,6 +30,7 @@ class Venue(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     location = db.Column(db.String(255))
+    contact = db.Column(db.Boolean, default=False)  # 新增字段
     def __repr__(self):
         return self.name
 

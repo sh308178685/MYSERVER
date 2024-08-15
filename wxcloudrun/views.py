@@ -103,7 +103,7 @@ def get_allbookings():
 @app.route('/venues', methods=['GET'])
 def get_venues():
     venues = Venue.query.all()
-    return jsonify([{'id': v.id, 'name': v.name, 'location': v.location} for v in venues])
+    return jsonify([{'id': v.id, 'name': v.name, 'location': v.location ,'contact' :v.contact } for v in venues])
 
 
 @app.route('/takebooking', methods=['POST'])
