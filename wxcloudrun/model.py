@@ -44,6 +44,7 @@ class Booking(db.Model):
     start_date = db.Column(db.Date)
     end_date = db.Column(db.Date)
     details = db.Column(db.Text)
+    phone = db.Column(db.Text)
     user = db.relationship('User', backref=db.backref('bookings', lazy=True))
     venue = db.relationship('Venue', backref=db.backref('bookings', lazy=True))
 

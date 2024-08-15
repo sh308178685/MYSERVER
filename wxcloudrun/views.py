@@ -117,6 +117,7 @@ def create_booking():
         start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d %H:%M')
         end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d %H:%M')
         details = data.get('details')
+        phone = data.get('phone')
 
         existing_booking = Booking.query.filter(
             Booking.user_id == user_id,
@@ -138,6 +139,7 @@ def create_booking():
             start_date=start_date,
             end_date=end_date,
             details=details,
+            phone = phone,
             status='pending',
             
         )
