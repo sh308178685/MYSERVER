@@ -58,8 +58,8 @@ class Booking(db.Model):
 
 
 class BookingModelView(ModelView):
-    column_list = ('user.username', 'venue.name', 'start_date', 'end_date', 'details', 'status', 'admin_feedback')
-    form_columns = ('user', 'venue', 'start_date', 'end_date', 'details', 'status', 'admin_feedback')
+    column_list = ('user.username', 'venue.name', 'start_date', 'end_date', 'details', 'phone','status', 'admin_feedback')
+    form_columns = ('user', 'venue', 'start_date', 'end_date', 'details', 'status', 'phone','admin_feedback')
 
     # 使用column_formatters来格式化status字段的显示
     column_formatters = {
@@ -82,8 +82,8 @@ class BookingModelView(ModelView):
 
 
 class PendingBookingModelView(ModelView):
-    column_list = ('user.username', 'venue.name', 'start_date', 'end_date', 'details', 'status', 'admin_feedback')
-    form_columns = ('user', 'venue', 'start_date', 'end_date', 'details', 'status', 'admin_feedback')
+    column_list = ('user.username', 'venue.name', 'start_date', 'end_date', 'details', 'phone','status', 'admin_feedback')
+    form_columns = ('user', 'venue', 'start_date', 'end_date', 'details', 'status', 'phone','admin_feedback')
 
     # 使用 column_formatters 将 status 显示为中文
     column_formatters = {
