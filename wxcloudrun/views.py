@@ -112,6 +112,15 @@ def create_booking():
     user_id = Util.get_current_user_id(request)
 
     if user_id is not None:
+
+        start_date_str = data.get('start_date')
+        end_date_str = data.get('end_date')
+        details = data.get('details')
+
+        if not (start_date_str and end_date_str and details):
+            return jsonify({'message': '信息填写不完整.'}), 501
+
+
         try:
             venue_id = data.get('venue_id')
             # booking_date = datetime.strptime(data.get('booking_date'), '%Y-%m-%d').date()
@@ -148,7 +157,7 @@ def create_booking():
             db.session.add(new_booking)
             db.session.commit()
         except:
-            jsonify({'message': '数据异常.'}), 500
+            return jsonify({'message': '数据异常.'}), 500
             
 
         return jsonify({'message': '预定提交成功.'}), 201
@@ -160,7 +169,7 @@ def create_booking():
 def get_bookings():
     user_id = Util.get_current_user_id(request)
     bookings = Booking.query.filter_by(user_id=user_id).all()
-    if user_id:
+    if user_id is not None:
 
         result = []
         for booking in bookings:
