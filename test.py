@@ -1,11 +1,12 @@
-from flask import Flask
-from flask_mysqldb import MySQL
+# from flask import Flask
+# from flask_mysqldb import MySQL
 
-app = Flask(__name__)
+# app = Flask(__name__)
 
 # Configure MySQL
 
 # app.config['MYSQL_HOST'] = "sh-cynosdbmysql-grp-c25eh650.sql.tencentcdb.com"
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:890527@localhost/venue_booking'
 # app.config['MYSQL_HOST'] = "localhost"
 # app.config['MYSQL_USER'] = "root"
 # # app.config['MYSQL_PASSWORD'] = "KXh9VsgZ"
@@ -14,41 +15,63 @@ app = Flask(__name__)
 # # app.config['MYSQL_PORT'] = 29998
 # app.config['MYSQL_PORT'] = 3306
 
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+from flask import Flask, redirect, url_for, request
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 
-class Config:
-    MYSQL_USER = 'root'
-    MYSQL_PASSWORD = '890527'
-    MYSQL_DB = 'venue_booking'
-    MYSQL_HOST = 'localhost'
-    MYSQL_PORT = 3306
-    MYSQL_CURSORCLASS = 'DictCursor'
-    SQLALCHEMY_DATABASE_URI = 'mysql://root:890527@localhost/venue_booking'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    APP_ID = 'wx666e0c0e26d4d33e'
-    APP_SECRET = '9c351869c1c6e30160dc832796dfdacc'
-    SERVER_SECRET = 'a3c9f9b10a2e4a8fb0931fc2ed5ab1d4f3c5c34c79a6e6d0'
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:890527@localhost/venue_booking'
+db = SQLAlchemy(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
-app.config.from_object(Config)
-mysql = MySQL(app)
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
 
-@app.route('/')
-def index():
-    # Use the MySQL connection
-    
-    
-    
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and user.password == password:
+            login_user(user)
+            return redirect(url_for('admin.index'))
+    return '''
+    <form method="POST">
+        Username: <input type="text" name="username"><br>
+        Password: <input type="password" name="password"><br>
+        <input type="submit" value="Login">
+    </form>
+    '''
 
-    try:
-        cur = mysql.connection.cursor()
-        cur.execute('SELECT * FROM venues')
-        row = cur.fetchone()
-        cur.close()
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
-        return str(row)
-    except Exception as e:
-        return f"An error occurred: {e}"
+class MyModelView(ModelView):
+    def is_accessible(self):
+        return current_user.is_authenticated
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login'))
+
+admin = Admin(app, name='MyApp', template_mode='bootstrap3')
+admin.add_view(MyModelView(User, db.session))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

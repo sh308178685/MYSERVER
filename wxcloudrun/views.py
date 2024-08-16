@@ -112,66 +112,73 @@ def create_booking():
     user_id = Util.get_current_user_id(request)
 
     if user_id is not None:
-        venue_id = data.get('venue_id')
-        # booking_date = datetime.strptime(data.get('booking_date'), '%Y-%m-%d').date()
-        start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d %H:%M')
-        end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d %H:%M')
-        details = data.get('details')
-        phone = data.get('phone')
+        try:
+            venue_id = data.get('venue_id')
+            # booking_date = datetime.strptime(data.get('booking_date'), '%Y-%m-%d').date()
+            start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d %H:%M')
+            end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d %H:%M')
+            details = data.get('details')
+            phone = data.get('phone')
 
-        existing_booking = Booking.query.filter(
-            Booking.user_id == user_id,
-            Booking.venue_id == venue_id,
-            # Booking.booking_date == booking_date,
-            Booking.start_date <= end_date,
-            Booking.end_date >= start_date
-        ).first()
-        if existing_booking:
-            return jsonify({'message': 'This time slot is already booked.'}), 400
+            existing_booking = Booking.query.filter(
+                Booking.user_id == user_id,
+                Booking.venue_id == venue_id,
+                # Booking.booking_date == booking_date,
+                Booking.start_date <= end_date,
+                Booking.end_date >= start_date
+            ).first()
+            if existing_booking:
+                return jsonify({'message': 'This time slot is already booked.'}), 400
 
-        if end_date <= start_date:
-            return jsonify({'message': 'end time is before start time.'}), 401
+            if end_date <= start_date:
+                return jsonify({'message': 'end time is before start time.'}), 401
 
-        new_booking = Booking(
-            user_id=user_id,
-            venue_id=venue_id,
-            # booking_date=booking_date,
-            start_date=start_date,
-            end_date=end_date,
-            details=details,
-            phone = phone,
-            status='pending',
+            new_booking = Booking(
+                user_id=user_id,
+                venue_id=venue_id,
+                # booking_date=booking_date,
+                start_date=start_date,
+                end_date=end_date,
+                details=details,
+                phone = phone,
+                status='pending',
+                
+            )
+
+            db.session.add(new_booking)
+            db.session.commit()
+        except:
+            jsonify({'message': '数据异常.'}), 500
             
-        )
 
-        db.session.add(new_booking)
-        db.session.commit()
-
-        return jsonify({'message': 'Booking created successfully.'}), 201
+        return jsonify({'message': '预定提交成功.'}), 201
     else:
-        return jsonify({'message': 'TOKEN过期请重新登录.'}), 202
+        return jsonify({'message': '登录过期请重新登录.'}), 202
 
 
 @app.route('/bookings', methods=['GET'])
 def get_bookings():
     user_id = Util.get_current_user_id(request)
     bookings = Booking.query.filter_by(user_id=user_id).all()
+    if user_id:
 
-    result = []
-    for booking in bookings:
-        venue = Venue.query.get(booking.venue_id)
-        result.append({
-            'id': booking.id,
-            'venue_name': venue.name,
-            'venue_location': venue.location,
-            # 'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
-            'start_date': booking.start_date.strftime('%Y-%m-%d %H:%M'),
-            'end_date': booking.end_date.strftime('%Y-%m-%d %H:%M'),
-            'details': booking.details,
-            'status':booking.status,
-            'admin_feedback':booking.admin_feedback
+        result = []
+        for booking in bookings:
+            venue = Venue.query.get(booking.venue_id)
+            result.append({
+                'id': booking.id,
+                'venue_name': venue.name,
+                'venue_location': venue.location,
+                # 'booking_date': booking.booking_date.strftime('%Y-%m-%d'),
+                'start_date': booking.start_date.strftime('%Y-%m-%d %H:%M'),
+                'end_date': booking.end_date.strftime('%Y-%m-%d %H:%M'),
+                'details': booking.details,
+                'status':booking.status,
+                'admin_feedback':booking.admin_feedback
 
-        })
+            })
+    else:
+        return jsonify({'message': '登录过期请重新登录.'}), 202
 
     return jsonify(result), 200
 
@@ -184,4 +191,4 @@ def cancel_booking(booking_id):
     db.session.delete(booking)
     db.session.commit()
 
-    return jsonify({'message': 'Booking cancelled successfully.'}), 200
+    return jsonify({'message': '预定取消成功.'}), 200
