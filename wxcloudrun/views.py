@@ -130,7 +130,8 @@ def create_booking():
             phone = data.get('phone')
 
             existing_booking = Booking.query.filter(
-                Booking.user_id == user_id,
+                # Booking.user_id == user_id,
+                Booking.status == 'approved',
                 Booking.venue_id == venue_id,
                 # Booking.booking_date == booking_date,
                 Booking.start_date <= end_date,
